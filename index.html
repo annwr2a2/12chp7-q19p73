@@ -12,33 +12,38 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 10px;
             margin: 0;
             user-select: none;
-            font-size: 18px;
+            font-size: 16px;
+            box-sizing: border-box;
         }
 
         h1 {
             color: #2c3e50;
             margin-bottom: 5px;
-            font-size: 26px;
+            font-size: 1.5rem;
+            text-align: center;
         }
 
         .credits {
-            font-size: 18px;
+            font-size: 1rem;
             color: #2980b9;
             font-weight: bold;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
+        /* جعل الحاويات مرنة ومتجاوبة */
         .program-frame {
-            width: 960px;
+            width: 100%;
+            max-width: 960px;
             background-color: white;
             border: 3px solid #34495e;
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 35px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20 rgba(0,0,0,0.06);
             box-sizing: border-box;
         }
 
@@ -47,12 +52,13 @@
         }
 
         .explanation-header {
-            width: 960px;
+            width: 100%;
+            max-width: 960px;
             background: #34495e;
             color: white;
-            padding: 15px 20px;
+            padding: 15px;
             border-radius: 8px 8px 0 0;
-            font-size: 18px;
+            font-size: 1rem;
             font-weight: bold;
             line-height: 1.6;
             box-sizing: border-box;
@@ -64,12 +70,16 @@
             padding-right: 20px;
         }
 
+        /* جعل الكانفاس مرن */
         canvas {
             display: block;
             background-color: #fafafa;
             border: 1px solid #dcdde1;
             border-radius: 6px;
             margin: 0 auto;
+            width: 100%;
+            height: auto;
+            max-width: 910px;
         }
 
         .controls-wrapper {
@@ -88,39 +98,41 @@
             justify-content: space-around;
             align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
         }
 
         .control-group {
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         label {
             font-weight: bold;
             color: #34495e;
-            font-size: 16px;
+            font-size: 0.95rem;
         }
 
         input[type="range"] {
-            width: 160px;
+            width: 140px;
             cursor: pointer;
         }
 
         input[type="number"] {
-            width: 85px;
+            width: 75px;
             padding: 6px;
             border: 1px solid #bdc3c7;
             border-radius: 4px;
             text-align: center;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 0.95rem;
         }
 
         button {
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 0.95rem;
             font-weight: bold;
             cursor: pointer;
             background-color: #3498db;
@@ -128,10 +140,21 @@
             border: none;
             border-radius: 6px;
             transition: background 0.2s;
+            width: 100%;
+            max-width: 200px;
         }
 
         button:hover {
             background-color: #2980b9;
+        }
+
+        /* تحسينات الشاشات الصغيرة (الهواتف) */
+        @media (max-width: 600px) {
+            body { padding: 5px; }
+            .control-row { flex-direction: column; width: 100%; }
+            .control-group { width: 100%; justify-content: space-between; }
+            input[type="range"] { flex-grow: 1; max-width: 150px; }
+            button { max-width: 100%; }
         }
     </style>
 </head>
@@ -227,29 +250,48 @@
 
         const canvasDynamic = document.getElementById('canvasDynamic');
         
-        canvasDynamic.addEventListener('mousedown', (e) => {
-            const rect = canvasDynamic.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+        // دالة مساعدة للحصول على إحداثيات الماوس أو اللمس بشكل صحيح ومتجاوب
+        function getMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            // حساب النسبة بين الحجم الحقيقي للكانفاس والحجم المعروض على الشاشة لضمان دقة اللمس
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX, clientY;
+            if (evt.touches && evt.touches.length > 0) {
+                clientX = evt.touches[0].clientX;
+                clientY = evt.touches[0].clientY;
+            } else {
+                clientX = evt.clientX;
+                clientY = evt.clientY;
+            }
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrag(e) {
+            const pos = getMousePos(canvasDynamic, e);
             const currentDistCm = parseFloat(distInput.value);
             const rulerWidthPixels = currentDistCm * pixelPerCm;
 
-            if (mouseX >= rulerX && mouseX <= rulerX + rulerWidthPixels && mouseY >= rulerYOffset - 15 && mouseY <= rulerYOffset + 25) {
+            if (pos.x >= rulerX && pos.x <= rulerX + rulerWidthPixels && pos.y >= rulerYOffset - 15 && pos.y <= rulerYOffset + 25) {
                 isDraggingRuler = true;
-                dragStartX = mouseX - rulerX;
+                dragStartX = pos.x - rulerX;
                 canvasDynamic.style.cursor = 'grabbing';
+                if(e.cancelable) e.preventDefault();
             }
-        });
+        }
 
-        canvasDynamic.addEventListener('mousemove', (e) => {
-            const rect = canvasDynamic.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+        function moveDrag(e) {
+            const pos = getMousePos(canvasDynamic, e);
             const currentDistCm = parseFloat(distInput.value);
             const rulerWidthPixels = currentDistCm * pixelPerCm;
 
             if (!isDraggingRuler) {
-                if (mouseX >= rulerX && mouseX <= rulerX + rulerWidthPixels && mouseY >= rulerYOffset - 15 && mouseY <= rulerYOffset + 25) {
+                if (pos.x >= rulerX && pos.x <= rulerX + rulerWidthPixels && pos.y >= rulerYOffset - 15 && pos.y <= rulerYOffset + 25) {
                     canvasDynamic.style.cursor = 'grab';
                 } else {
                     canvasDynamic.style.cursor = 'default';
@@ -257,13 +299,23 @@
             }
 
             if (isDraggingRuler) {
-                rulerX = mouseX - dragStartX;
+                rulerX = pos.x - dragStartX;
                 if (rulerX < 40) rulerX = 40;
-                if (rulerX > canvasDynamic.width - 100) rulerX = canvasDynamic.width - 100;
+                if (rulerX > canvasDynamic.width - rulerWidthPixels - 20) rulerX = canvasDynamic.width - rulerWidthPixels - 20;
+                if(e.cancelable) e.preventDefault();
             }
-        });
+        }
 
-        window.addEventListener('mouseup', () => { isDraggingRuler = false; });
+        function stopDrag() { isDraggingRuler = false; }
+
+        // دعم الماوس واللمس للهواتف (Touch Events)
+        canvasDynamic.addEventListener('mousedown', startDrag);
+        canvasDynamic.addEventListener('mousemove', moveDrag);
+        window.addEventListener('mouseup', stopDrag);
+
+        canvasDynamic.addEventListener('touchstart', startDrag, { passive: false });
+        canvasDynamic.addEventListener('touchmove', moveDrag, { passive: false });
+        window.addEventListener('touchend', stopDrag);
 
         function drawHardware(ctx, x, y, labelFreq) {
             ctx.fillStyle = "#34495e"; ctx.fillRect(x, y + 60, 100, 50);
@@ -362,11 +414,8 @@
             ctx2.beginPath(); ctx2.moveTo(rulerX + rulerWidthPixels, rulerYOffset); ctx2.lineTo(rulerX + rulerWidthPixels, rulerYOffset + 20);
             ctx2.stroke();
             
-            // --- التعديل المحدث ليكون الرقم والوحدة متحدين معاً بجوار بعضهما ---
             ctx2.fillStyle = darkBlueColor; 
             ctx2.font = "bold 15px Arial";
-            
-            // كتابة الرقم والوحدة معاً (مثال: cm 40.0) في منتصف المسطرة وتحت الخط تماماً
             ctx2.fillText(`${currentDistCm.toFixed(1)} cm`, rulerX + (rulerWidthPixels / 2) - 30, rulerYOffset + 32);
 
             nodePositions.forEach((nX, index) => {
