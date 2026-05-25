@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مختبر أنبوب كوندت المتكامل - الأستاذ أنور البلوشي</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+            font-size: 18px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 26px;
+        }
+
+        .credits {
+            font-size: 18px;
+            color: #2980b9;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        .program-frame {
+            width: 960px;
+            background-color: white;
+            border: 3px solid #34495e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 35px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            box-sizing: border-box;
+        }
+
+        .program-frame.interactive {
+            border-color: #e67e22;
+        }
+
+        .explanation-header {
+            width: 960px;
+            background: #34495e;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.6;
+            box-sizing: border-box;
+            margin-bottom: -3px;
+        }
+
+        .explanation-header ul {
+            margin: 5px 0 0 0;
+            padding-right: 20px;
+        }
+
+        canvas {
+            display: block;
+            background-color: #fafafa;
+            border: 1px solid #dcdde1;
+            border-radius: 6px;
+            margin: 0 auto;
+        }
+
+        .controls-wrapper {
+            margin-top: 15px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dcdde1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #34495e;
+            font-size: 16px;
+        }
+
+        input[type="range"] {
+            width: 160px;
+            cursor: pointer;
+        }
+
+        input[type="number"] {
+            width: 85px;
+            padding: 6px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>محاكاة أنبوب كوندت لتوليد الموجات الموقوفة</h1>
+    <div class="credits">إعداد الأستاذ: أنور البلوشي | هاتف: 92818606</div>
+
+    <div class="explanation-header">
+        📝 النقاط وحركة الجزيئات في الموجة الموقوفة:
+        <ul>
+            <li><strong>Q و T (عُقد):</strong> انعدام الحركة تماماً نتيجة تضاغط جزيئات الهواء من الجانبين.</li>
+            <li><strong>P (قبل العقدة Q):</strong> تتحرك في اتجاه معاكس للنقاط (R, S) لإظهار آلية حدوث التضاغط والتخلخل حول العقدة.</li>
+            <li><strong>S (مركز البطن):</strong> أقصى سعة اهتزاز أفقية، ولا يتجمع الغبار تحتها.</li>
+        </ul>
+    </div>
+
+    <div class="program-frame">
+        <canvas id="canvasStatic" width="910" height="230"></canvas>
+    </div>
+
+    <div class="explanation-header">
+        ⚙️ آلية عمل الأنبوب التفاعلي الثاني:
+        <br>
+        تغير التردد يغير الطول الموجي ومواضع الكومات تلقائياً وعكسياً. تلاحظ استقرار الجزيئات الزرقاء تماماً في مراكز الكومات (العقد)، بينما تتحرك الجزيئات الحمراء حركة طولية متضادة حولها لصناعة التضاغط والتخلخل بدقة تامة.
+    </div>
+
+    <div class="program-frame interactive">
+        <canvas id="canvasDynamic" width="910" height="230"></canvas>
+        
+        <div class="controls-wrapper">
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="freqSlider">التردد (Hz):</label>
+                    <input type="range" id="freqSlider" min="300" max="700" step="10" value="425">
+                    <input type="number" id="freqInput" min="300" max="700" value="425">
+                </div>
+
+                <div class="control-group">
+                    <label for="distSlider">طول المسطرة (cm):</label>
+                    <input type="range" id="distSlider" min="20" max="120" step="0.1" value="40.0">
+                    <input type="number" id="distInput" min="20" max="120" step="0.1" value="40.0">
+                </div>
+                
+                <button id="playPauseBtn">إيقاف / تشغيل الحركة</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRunning = true;
+        let time = 0;
+        const vSound = 340; 
+        const pixelPerCm = 4.5; 
+
+        const freqSlider = document.getElementById('freqSlider');
+        const freqInput = document.getElementById('freqInput');
+        const distSlider = document.getElementById('distSlider');
+        const distInput = document.getElementById('distInput');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+
+        let lastFreq = 0; 
+
+        freqSlider.addEventListener('input', (e) => freqInput.value = e.target.value);
+        freqInput.addEventListener('input', (e) => freqSlider.value = e.target.value);
+        distSlider.addEventListener('input', (e) => distInput.value = parseFloat(e.target.value).toFixed(1));
+        distInput.addEventListener('input', (e) => distSlider.value = e.target.value);
+
+        playPauseBtn.addEventListener('click', () => { isRunning = !isRunning; });
+
+        let rulerX = 290; 
+        const rulerYOffset = 185; 
+        let isDraggingRuler = false;
+        let dragStartX = 0;
+
+        const tubeX = 240;
+        const tubeY = 50;
+        const tubeHeight = 70;
+        const midTubeY = tubeY + (tubeHeight / 2);
+
+        const tube1Width = 550;
+        const tube2Width = 630;
+
+        const waveLength1Pixels = tube1Width / 3; 
+        
+        const particles1 = [
+            { name: 'P', x: tubeX + 30, amp: 12, phaseInverse: true },                   
+            { name: 'Q', x: tubeX + waveLength1Pixels * 0.5, amp: 0, phaseInverse: false }, 
+            { name: 'R', x: tubeX + waveLength1Pixels * 0.9, amp: 11, phaseInverse: false }, 
+            { name: 'S', x: tubeX + waveLength1Pixels * 1.5, amp: 26, phaseInverse: false }, 
+            { name: 'T', x: tubeX + waveLength1Pixels * 2.3, amp: 12, phaseInverse: false }  
+        ];
+
+        const canvasDynamic = document.getElementById('canvasDynamic');
+        
+        canvasDynamic.addEventListener('mousedown', (e) => {
+            const rect = canvasDynamic.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const currentDistCm = parseFloat(distInput.value);
+            const rulerWidthPixels = currentDistCm * pixelPerCm;
+
+            if (mouseX >= rulerX && mouseX <= rulerX + rulerWidthPixels && mouseY >= rulerYOffset - 15 && mouseY <= rulerYOffset + 25) {
+                isDraggingRuler = true;
+                dragStartX = mouseX - rulerX;
+                canvasDynamic.style.cursor = 'grabbing';
+            }
+        });
+
+        canvasDynamic.addEventListener('mousemove', (e) => {
+            const rect = canvasDynamic.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const currentDistCm = parseFloat(distInput.value);
+            const rulerWidthPixels = currentDistCm * pixelPerCm;
+
+            if (!isDraggingRuler) {
+                if (mouseX >= rulerX && mouseX <= rulerX + rulerWidthPixels && mouseY >= rulerYOffset - 15 && mouseY <= rulerYOffset + 25) {
+                    canvasDynamic.style.cursor = 'grab';
+                } else {
+                    canvasDynamic.style.cursor = 'default';
+                }
+            }
+
+            if (isDraggingRuler) {
+                rulerX = mouseX - dragStartX;
+                if (rulerX < 40) rulerX = 40;
+                if (rulerX > canvasDynamic.width - 100) rulerX = canvasDynamic.width - 100;
+            }
+        });
+
+        window.addEventListener('mouseup', () => { isDraggingRuler = false; });
+
+        function drawHardware(ctx, x, y, labelFreq) {
+            ctx.fillStyle = "#34495e"; ctx.fillRect(x, y + 60, 100, 50);
+            ctx.fillStyle = "#fff"; ctx.font = "12px Arial"; ctx.fillText("مولد إشارة", x + 22, y + 90);
+            ctx.beginPath(); ctx.moveTo(x + 50, y + 60); ctx.lineTo(x + 50, y + 25);
+            ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = "#7f8c8d"; ctx.fillRect(x + 25, y, 45, 35);
+            ctx.beginPath(); ctx.moveTo(x + 70, y - 5); ctx.lineTo(x + 115, y - 20); ctx.lineTo(x + 115, y + 55); ctx.lineTo(x + 70, y + 40);
+            ctx.closePath(); ctx.fillStyle = "#95a5a6"; ctx.fill(); ctx.stroke();
+            ctx.fillStyle = "#27ae60"; ctx.font = "bold 12px Arial"; ctx.fillText(`f = ${labelFreq} Hz`, x + 15, y + 50);
+        }
+
+        function loop() {
+            // [1] رسم الإطار الأول الثابت
+            const cStatic = document.getElementById('canvasStatic');
+            const ctx1 = cStatic.getContext('2d');
+            ctx1.clearRect(0, 0, cStatic.width, cStatic.height);
+
+            drawHardware(ctx1, 40, tubeY + 5, 512);
+
+            ctx1.strokeStyle = "#2c3e50"; ctx1.lineWidth = 3; ctx1.beginPath();
+            ctx1.moveTo(tubeX, tubeY); ctx1.lineTo(tubeX + tube1Width, tubeY);
+            ctx1.moveTo(tubeX, tubeY + tubeHeight); ctx1.lineTo(tubeX + tube1Width, tubeY + tubeHeight);
+            ctx1.stroke();
+
+            const piles1 = [tubeX + waveLength1Pixels * 0.5, tubeX + waveLength1Pixels * 2.7];
+            ctx1.fillStyle = "#bdc3c7";
+            piles1.forEach(x => {
+                ctx1.beginPath(); ctx1.moveTo(x - 22, tubeY + tubeHeight);
+                ctx1.quadraticCurveTo(x, tubeY + tubeHeight - 20, x + 22, tubeY + tubeHeight);
+                ctx1.closePath(); ctx1.fill(); ctx1.stroke();
+            });
+
+            particles1.forEach(p => {
+                let factor = p.phaseInverse ? -1 : 1;
+                let dx = Math.sin(time * 0.12) * p.amp * factor;
+                ctx1.beginPath(); ctx1.arc(p.x + dx, midTubeY, 5, 0, Math.PI * 2);
+                ctx1.fillStyle = (p.name === 'S') ? "#e74c3c" : (p.amp === 0 ? "#2980b9" : "#e67e22");
+                ctx1.fill(); ctx1.stroke();
+                ctx1.fillStyle = "#000"; ctx1.font = "bold 14px Arial"; ctx1.fillText(p.name, p.x + dx - 5, midTubeY - 15);
+            });
+
+            // [2] رسم الإطار الثاني التفاعلي
+            const ctx2 = canvasDynamic.getContext('2d');
+            ctx2.clearRect(0, 0, canvasDynamic.width, canvasDynamic.height);
+
+            const currentFreq = parseFloat(freqInput.value);
+            const currentDistCm = parseFloat(distInput.value);
+
+            drawHardware(ctx2, 40, tubeY + 5, currentFreq);
+
+            ctx2.strokeStyle = "#2c3e50"; ctx2.lineWidth = 3; ctx2.beginPath();
+            ctx2.moveTo(tubeX, tubeY); ctx2.lineTo(tubeX + tube2Width, tubeY);
+            ctx2.moveTo(tubeX, tubeY + tubeHeight); ctx2.lineTo(tubeX + tube2Width, tubeY + tubeHeight);
+            ctx2.stroke();
+
+            const lambdaCm = (vSound / currentFreq) * 100;
+            const nodeSpacingPixels = (lambdaCm / 2) * pixelPerCm; 
+
+            let firstNodeX = tubeX + 50; 
+            let nodeX = firstNodeX;
+            let nodePositions = [];
+
+            ctx2.fillStyle = "#95a5a6";
+            while (nodeX < tubeX + tube2Width - 10) {
+                ctx2.beginPath(); ctx2.moveTo(nodeX - 20, tubeY + tubeHeight);
+                ctx2.quadraticCurveTo(nodeX, tubeY + tubeHeight - 18, nodeX + 20, tubeY + tubeHeight);
+                ctx2.closePath(); ctx2.fill(); ctx2.stroke();
+                
+                nodePositions.push(nodeX); 
+                nodeX += nodeSpacingPixels;
+            }
+
+            if (currentFreq !== lastFreq && nodePositions.length > 0) {
+                rulerX = nodePositions[0]; 
+                lastFreq = currentFreq;
+            }
+
+            // رسم مسطرة القياس التفاعلية باللون الكحلي الغامق
+            const rulerWidthPixels = currentDistCm * pixelPerCm;
+            const darkBlueColor = "#130f40"; 
+
+            ctx2.fillStyle = "rgba(19, 15, 64, 0.04)";
+            ctx2.fillRect(rulerX - 5, rulerYOffset - 12, rulerWidthPixels + 10, 32);
+
+            ctx2.beginPath(); ctx2.moveTo(rulerX, rulerYOffset + 10); ctx2.lineTo(rulerX + rulerWidthPixels, rulerYOffset + 10);
+            ctx2.strokeStyle = darkBlueColor; ctx2.lineWidth = 3; ctx2.stroke();
+            
+            // علامة الصفر المرجعية (أعلى الخط)
+            ctx2.beginPath(); ctx2.moveTo(rulerX, rulerYOffset); ctx2.lineTo(rulerX, rulerYOffset + 20);
+            ctx2.strokeStyle = darkBlueColor; ctx2.lineWidth = 2; ctx2.stroke();
+            ctx2.fillStyle = darkBlueColor; ctx2.font = "bold 13px Arial";
+            ctx2.fillText("0", rulerX - 4, rulerYOffset - 5);
+
+            // علامة حافة نهاية البعد للمسطرة
+            ctx2.beginPath(); ctx2.moveTo(rulerX + rulerWidthPixels, rulerYOffset); ctx2.lineTo(rulerX + rulerWidthPixels, rulerYOffset + 20);
+            ctx2.stroke();
+            
+            // --- التعديل المحدث ليكون الرقم والوحدة متحدين معاً بجوار بعضهما ---
+            ctx2.fillStyle = darkBlueColor; 
+            ctx2.font = "bold 15px Arial";
+            
+            // كتابة الرقم والوحدة معاً (مثال: cm 40.0) في منتصف المسطرة وتحت الخط تماماً
+            ctx2.fillText(`${currentDistCm.toFixed(1)} cm`, rulerX + (rulerWidthPixels / 2) - 30, rulerYOffset + 32);
+
+            nodePositions.forEach((nX, index) => {
+                ctx2.beginPath();
+                ctx2.arc(nX, midTubeY, 4.5, 0, Math.PI * 2);
+                ctx2.fillStyle = "#2980b9"; 
+                ctx2.fill(); ctx2.stroke();
+
+                if (index < nodePositions.length - 1) {
+                    let nextNX = nodePositions[index + 1];
+                    let midPoint = (nX + nextNX) / 2; 
+
+                    let dxS = Math.sin(time * (currentFreq * 0.0004)) * 22;
+                    ctx2.beginPath(); ctx2.arc(midPoint + dxS, midTubeY, 4, 0, Math.PI * 2);
+                    ctx2.fillStyle = "#e74c3c"; ctx2.fill(); ctx2.stroke();
+
+                    let p1 = (nX + midPoint) / 2;
+                    let dx1 = Math.sin(time * (currentFreq * 0.0004)) * 11 * 1; 
+                    ctx2.beginPath(); ctx2.arc(p1 + dx1, midTubeY, 4, 0, Math.PI * 2);
+                    ctx2.fillStyle = "#e67e22"; ctx2.fill(); ctx2.stroke();
+
+                    let p2 = (midPoint + nextNX) / 2;
+                    let dx2 = Math.sin(time * (currentFreq * 0.0004)) * 11 * -1; 
+                    ctx2.beginPath(); ctx2.arc(p2 + dx2, midTubeY, 4, 0, Math.PI * 2);
+                    ctx2.fillStyle = "#e67e22"; ctx2.fill(); ctx2.stroke();
+                }
+            });
+
+            if (isRunning) { time += 1; }
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
